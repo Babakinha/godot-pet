@@ -625,6 +625,22 @@ float Window::get_output_max_linear_value() const {
 	return 1.0f;
 }
 
+void Window::set_wayland_layer(WaylandLayer p_layer) {
+	ERR_MAIN_THREAD_GUARD;
+	wayland_layer = p_layer;
+
+	if (window_id != DisplayServerEnums::INVALID_WINDOW_ID && DisplayServer::get_singleton()->has_feature(DisplayServerEnums::FEATURE_WAYLAND_LAYER_SHELL)) {
+		if (!is_in_edited_scene_root()) {
+			DisplayServer::get_singleton()->window_set_wayland_layer(p_layer, window_id);
+		}
+	}
+}
+
+Window::WaylandLayer Window::get_wayland_layer() const {
+	ERR_READ_THREAD_GUARD_V(WAYLAND_LAYER_NORMAL);
+	return wayland_layer;
+}
+
 bool Window::is_maximize_allowed() const {
 	ERR_READ_THREAD_GUARD_V(false);
 	if (window_id != DisplayServerEnums::INVALID_WINDOW_ID) {
@@ -3418,6 +3434,9 @@ void Window::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_fullscreen_shortcut_enabled", "enabled"), &Window::set_fullscreen_shortcut_enabled);
 	ClassDB::bind_method(D_METHOD("is_fullscreen_shortcut_enabled"), &Window::is_fullscreen_shortcut_enabled);
 
+	ClassDB::bind_method(D_METHOD("set_wayland_layer", "layer"), &Window::set_wayland_layer);
+	ClassDB::bind_method(D_METHOD("get_wayland_layer"), &Window::get_wayland_layer);
+
 	ClassDB::bind_method(D_METHOD("is_maximize_allowed"), &Window::is_maximize_allowed);
 
 	ClassDB::bind_method(D_METHOD("request_attention"), &Window::request_attention);
@@ -3606,6 +3625,7 @@ void Window::_bind_methods() {
 	ADD_PROPERTYI(PropertyInfo(Variant::BOOL, "maximize_disabled"), "set_flag", "get_flag", FLAG_MAXIMIZE_DISABLED);
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "fullscreen_shortcut_enabled"), "set_fullscreen_shortcut_enabled", "is_fullscreen_shortcut_enabled");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "force_native"), "set_force_native", "get_force_native");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "wayland_layer", PROPERTY_HINT_ENUM, "Normal,Background,Bottom,Top,Overlay"), "set_wayland_layer", "get_wayland_layer");
 
 	ADD_GROUP("Limits", "");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "min_size", PROPERTY_HINT_NONE, "suffix:px"), "set_min_size", "get_min_size");
@@ -3704,6 +3724,12 @@ void Window::_bind_methods() {
 	BIND_ENUM_CONSTANT(WINDOW_INITIAL_POSITION_CENTER_OTHER_SCREEN);
 	BIND_ENUM_CONSTANT(WINDOW_INITIAL_POSITION_CENTER_SCREEN_WITH_MOUSE_FOCUS);
 	BIND_ENUM_CONSTANT(WINDOW_INITIAL_POSITION_CENTER_SCREEN_WITH_KEYBOARD_FOCUS);
+
+	BIND_ENUM_CONSTANT(WAYLAND_LAYER_NORMAL);
+	BIND_ENUM_CONSTANT(WAYLAND_LAYER_BACKGROUND);
+	BIND_ENUM_CONSTANT(WAYLAND_LAYER_BOTTOM);
+	BIND_ENUM_CONSTANT(WAYLAND_LAYER_TOP);
+	BIND_ENUM_CONSTANT(WAYLAND_LAYER_OVERLAY);
 
 	GDVIRTUAL_BIND(_get_contents_minimum_size);
 

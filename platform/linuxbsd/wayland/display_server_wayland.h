@@ -99,6 +99,7 @@ class DisplayServerWayland : public DisplayServer {
 
 		bool hdr_requested = false;
 		WaylandThread::ColorProfile color_profile;
+		int wayland_layer = 0; // 0 = normal, 1 = background, 2 = bottom, 3 = top, 4 = overlay
 
 		Callable rect_changed_callback;
 		Callable window_event_callback;
@@ -309,6 +310,8 @@ public:
 	virtual void window_set_icon(const Ref<Image> &p_icon, DisplayServerEnums::WindowID p_window = DisplayServerEnums::MAIN_WINDOW_ID) override;
 
 	virtual bool window_is_maximize_allowed(DisplayServerEnums::WindowID p_window_id = DisplayServerEnums::MAIN_WINDOW_ID) const override;
+	virtual void window_set_wayland_layer(int p_layer, DisplayServerEnums::WindowID p_window_id = DisplayServerEnums::MAIN_WINDOW_ID) override;
+	virtual int window_get_wayland_layer(DisplayServerEnums::WindowID p_window_id = DisplayServerEnums::MAIN_WINDOW_ID) const override;
 
 	virtual void window_set_flag(DisplayServerEnums::WindowFlags p_flag, bool p_enabled, DisplayServerEnums::WindowID p_window_id = DisplayServerEnums::MAIN_WINDOW_ID) override;
 	virtual bool window_get_flag(DisplayServerEnums::WindowFlags p_flag, DisplayServerEnums::WindowID p_window_id = DisplayServerEnums::MAIN_WINDOW_ID) const override;

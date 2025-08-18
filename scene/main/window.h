@@ -114,6 +114,14 @@ public:
 		WINDOW_INITIAL_POSITION_CENTER_SCREEN_WITH_KEYBOARD_FOCUS,
 	};
 
+	enum WaylandLayer {
+		WAYLAND_LAYER_NORMAL,
+		WAYLAND_LAYER_BACKGROUND,
+		WAYLAND_LAYER_BOTTOM,
+		WAYLAND_LAYER_TOP,
+		WAYLAND_LAYER_OVERLAY,
+	};
+
 private:
 	DisplayServerEnums::WindowID window_id = DisplayServerEnums::INVALID_WINDOW_ID;
 	bool initialized = false;
@@ -150,6 +158,7 @@ private:
 	bool keep_title_visible = false;
 
 	LayoutDirection layout_dir = LAYOUT_DIRECTION_INHERITED;
+	WaylandLayer wayland_layer = WAYLAND_LAYER_NORMAL;
 
 	void _update_child_controls();
 	void _update_embedded_window();
@@ -353,6 +362,9 @@ public:
 	void set_hdr_output_requested(bool p_enabled);
 	bool is_hdr_output_requested() const;
 	float get_output_max_linear_value() const;
+
+	void set_wayland_layer(WaylandLayer p_layer);
+	WaylandLayer get_wayland_layer() const;
 
 	bool is_maximize_allowed() const;
 
@@ -562,3 +574,4 @@ VARIANT_ENUM_CAST(Window::ContentScaleAspect);
 VARIANT_ENUM_CAST(Window::ContentScaleStretch);
 VARIANT_ENUM_CAST(Window::LayoutDirection);
 VARIANT_ENUM_CAST(Window::WindowInitialPosition);
+VARIANT_ENUM_CAST(Window::WaylandLayer);
