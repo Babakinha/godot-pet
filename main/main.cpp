@@ -3407,6 +3407,11 @@ Error Main::setup2(bool p_show_boot_logo) {
 		}
 #endif
 		if (display_server->has_feature(DisplayServerEnums::FEATURE_SUBWINDOWS)) {
+			// Set Wayland layer from project settings before showing the window
+			if (display_server->has_feature(DisplayServerEnums::FEATURE_WAYLAND_LAYER_SHELL)) {
+				int wayland_layer = GLOBAL_GET("display/window/wayland/layer").operator int();
+				display_server->window_set_wayland_layer(DisplayServerEnums::MAIN_WINDOW_ID, wayland_layer);
+			}
 			display_server->show_window(DisplayServerEnums::MAIN_WINDOW_ID);
 		}
 

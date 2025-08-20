@@ -762,6 +762,12 @@ void WaylandThread::_wl_registry_on_global(void *data, struct wl_registry *wl_re
 		return;
 	}
 
+	if (strcmp(interface, zwlr_layer_shell_v1_interface.name) == 0) {
+		registry->wlr_layer_shell = (struct zwlr_layer_shell_v1 *)wl_registry_bind(wl_registry, name, &zwlr_layer_shell_v1_interface, 1);
+		registry->wlr_layer_shell_name = name;
+		return;
+	}
+
 	if (strcmp(interface, zwp_tablet_manager_v2_interface.name) == 0) {
 		registry->wp_tablet_manager = (struct zwp_tablet_manager_v2 *)wl_registry_bind(wl_registry, name, &zwp_tablet_manager_v2_interface, 1);
 		registry->wp_tablet_manager_name = name;
@@ -1150,6 +1156,17 @@ void WaylandThread::_wl_registry_on_global_remove(void *data, struct wl_registry
 		}
 
 		registry->wp_idle_inhibit_manager_name = 0;
+
+		return;
+	}
+
+	if (name == registry->wlr_layer_shell_name) {
+		if (registry->wlr_layer_shell) {
+			zwlr_layer_shell_v1_destroy(registry->wlr_layer_shell);
+			registry->wlr_layer_shell = nullptr;
+		}
+
+		registry->wlr_layer_shell_name = 0;
 
 		return;
 	}
