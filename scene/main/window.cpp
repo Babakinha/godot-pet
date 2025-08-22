@@ -757,6 +757,14 @@ void Window::_make_window() {
 	DisplayServer::get_singleton()->window_request_hdr_output(hdr_output_requested, window_id);
 	AccessibilityServer::get_singleton()->set_window_callbacks(window_id, callable_mp(this, &Window::_accessibility_activate), callable_mp(this, &Window::_accessibility_deactivate));
 
+	// Apply Wayland layer setting if set
+	if (wayland_layer != WAYLAND_LAYER_NORMAL && DisplayServer::get_singleton()->has_feature(DisplayServerEnums::FEATURE_WAYLAND_LAYER_SHELL)) {
+		if (!is_in_edited_scene_root()) {
+			DisplayServer::get_singleton()->window_set_wayland_layer(wayland_layer, window_id);
+		} else {
+		}
+	}
+
 	_update_window_size();
 
 	if (transient_parent) {

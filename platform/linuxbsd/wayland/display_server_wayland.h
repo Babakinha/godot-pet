@@ -139,6 +139,7 @@ class DisplayServerWayland : public DisplayServer {
 	DisplayServerEnums::WindowID window_id_counter = DisplayServerEnums::MAIN_WINDOW_ID;
 
 	WaylandThread wayland_thread;
+	int main_window_wayland_layer = 0;
 
 	DisplayServerEnums::Context context;
 	bool swap_cancel_ok = false;

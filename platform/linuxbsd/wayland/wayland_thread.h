@@ -371,6 +371,17 @@ public:
 		struct wp_color_management_surface_feedback_v1 *wp_color_management_surface_feedback = nullptr;
 		struct wp_color_management_surface_v1 *wp_color_management_surface = nullptr;
 
+		// Flag to prevent feedback loops during layer surface resizing
+		bool layer_surface_resizing = false;
+
+		// Flag to defer layer surface commit until next frame (similar to buffer_scale_changed)
+		bool layer_surface_config_changed = false;
+
+		// Rate limiting for configure events
+		uint64_t last_configure_time = 0;
+		uint32_t last_configure_width = 0;
+		uint32_t last_configure_height = 0;
+
 		struct zxdg_toplevel_decoration_v1 *xdg_toplevel_decoration = nullptr;
 
 		struct zwp_idle_inhibitor_v1 *wp_idle_inhibitor = nullptr;
@@ -673,6 +684,7 @@ private:
 	ThreadData thread_data;
 
 	HashMap<DisplayServerEnums::WindowID, WindowState> windows;
+	HashMap<DisplayServerEnums::WindowID, int> pending_window_layers;
 
 	List<Ref<Message>> messages;
 
@@ -831,6 +843,10 @@ private:
 	static void _xdg_popup_on_configure(void *data, struct xdg_popup *xdg_popup, int32_t x, int32_t y, int32_t width, int32_t height);
 	static void _xdg_popup_on_popup_done(void *data, struct xdg_popup *xdg_popup);
 	static void _xdg_popup_on_repositioned(void *data, struct xdg_popup *xdg_popup, uint32_t token);
+
+	// wlr-layer-shell event handlers.
+	static void _wlr_layer_surface_on_configure(void *data, struct zwlr_layer_surface_v1 *wlr_layer_surface, uint32_t serial, uint32_t width, uint32_t height);
+	static void _wlr_layer_surface_on_closed(void *data, struct zwlr_layer_surface_v1 *wlr_layer_surface);
 
 	// wayland-protocols event handlers.
 	static void _zwp_locked_pointer_v1_on_locked(void *data, struct zwp_locked_pointer_v1 *zwp_locked_pointer_v1);
@@ -1038,6 +1054,11 @@ private:
 		.repositioned = _xdg_popup_on_repositioned,
 	};
 
+	static constexpr struct zwlr_layer_surface_v1_listener wlr_layer_surface_listener = {
+		.configure = _wlr_layer_surface_on_configure,
+		.closed = _wlr_layer_surface_on_closed,
+	};
+
 	// wayland-protocols event listeners.
 	static constexpr struct zwp_locked_pointer_v1_listener zwp_locked_pointer_v1_listener{
 		.locked = _zwp_locked_pointer_v1_on_locked,
@@ -1225,6 +1246,18 @@ private:
 	// Crashes if there's an error in the display and crashes if so.
 	static void _wl_display_check_error(struct wl_display *wl_display);
 
+	// Helper function to calculate layer surface anchor and margins from position and size
+	struct LayerSurfaceConfig {
+		uint32_t anchor;
+		int32_t margin_top;
+		int32_t margin_right;
+		int32_t margin_bottom;
+		int32_t margin_left;
+		int32_t width;
+		int32_t height;
+	};
+	static LayerSurfaceConfig _calculate_layer_surface_config(const Rect2i &p_rect, const Size2i &p_output_size);
+
 	static void _seat_state_set_current(WaylandThread::SeatState &p_ss);
 	static Ref<InputEventKey> _seat_state_get_key_event(SeatState *p_ss, xkb_keycode_t p_keycode, bool p_pressed);
 	static Ref<InputEventKey> _seat_state_get_unstuck_key_event(SeatState *p_ss, xkb_keycode_t p_keycode, bool p_pressed, Key p_key);
@@ -1309,6 +1342,8 @@ public:
 	void window_set_max_size(DisplayServerEnums::WindowID p_window_id, const Size2i &p_size);
 	void window_set_min_size(DisplayServerEnums::WindowID p_window_id, const Size2i &p_size);
 
+	void window_set_layer_surface_rect(DisplayServerEnums::WindowID p_window_id, const Rect2i &p_rect);
+
 	void window_set_wayland_layer(DisplayServerEnums::WindowID p_window_id, int p_layer);
 	int window_get_wayland_layer(DisplayServerEnums::WindowID p_window_id) const;
 
@@ -1333,6 +1368,9 @@ public:
 
 	// Optional - require wp_color_management_v1
 	void window_set_color_profile(DisplayServerEnums::WindowID p_window_id, ColorProfile p_profile);
+
+	// Mouse passthrough for transparent overlays
+	void window_set_mouse_passthrough(DisplayServerEnums::WindowID p_window_id, const Vector<Vector2> &p_region);
 
 	ScreenData screen_get_data(int p_screen) const;
 	int get_screen_count() const;
