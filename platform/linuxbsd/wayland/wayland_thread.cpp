@@ -4620,7 +4620,7 @@ void WaylandThread::window_create(DisplayServerEnums::WindowID p_window_id, cons
 	ws.frame_callback = wl_surface_frame(ws.wl_surface);
 	wl_callback_add_listener(ws.frame_callback, &frame_wl_callback_listener, &ws);
 
-	// xdg_exporter_v2 doesnt work with layered windows
+	// xdg_exporter_v2 does not work with layered windows
 	if (ws.wayland_layer == 0) {
 		if (registry.xdg_exporter_v2) {
 			ws.xdg_exported_v2 = zxdg_exporter_v2_export_toplevel(registry.xdg_exporter_v2, ws.wl_surface);
