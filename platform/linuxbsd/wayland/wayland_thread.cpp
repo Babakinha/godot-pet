@@ -89,7 +89,6 @@ Vector<uint8_t> WaylandThread::_read_fd(int fd) {
 			break;
 		}
 
-
 		bytes_read += last_bytes_read;
 
 		// Increase the buffer size by one chunk in preparation of the next read.
@@ -1422,7 +1421,6 @@ void WaylandThread::_wl_surface_on_leave(void *data, struct wl_surface *wl_surfa
 	ERR_FAIL_NULL(ws);
 
 	ws->wl_outputs.erase(wl_output);
-
 }
 
 // TODO: Add support to this event.
@@ -1487,7 +1485,6 @@ void WaylandThread::_wl_output_on_done(void *data, struct wl_output *wl_output) 
 	ss->data = ss->pending_data;
 
 	ss->wayland_thread->_update_scale(ss->data.scale);
-
 }
 
 void WaylandThread::_wl_output_on_scale(void *data, struct wl_output *wl_output, int32_t factor) {
@@ -1495,7 +1492,6 @@ void WaylandThread::_wl_output_on_scale(void *data, struct wl_output *wl_output,
 	ERR_FAIL_NULL(ss);
 
 	ss->pending_data.scale = factor;
-
 }
 
 void WaylandThread::_wl_output_on_name(void *data, struct wl_output *wl_output, const char *name) {
@@ -1587,7 +1583,6 @@ void WaylandThread::_xdg_toplevel_on_configure(void *data, struct xdg_toplevel *
 	}
 
 	window_state_update_size(ws, width, height);
-
 }
 
 void WaylandThread::_xdg_toplevel_on_close(void *data, struct xdg_toplevel *xdg_toplevel) {
@@ -3414,7 +3409,6 @@ void WaylandThread::_wp_tablet_tool_on_proximity_in(void *data, struct zwp_table
 	ts->data_pending.proximity_serial = serial;
 	ts->data_pending.proximal_id = ws->id;
 	ts->data_pending.last_proximal_id = ws->id;
-
 }
 
 void WaylandThread::_wp_tablet_tool_on_proximity_out(void *data, struct zwp_tablet_tool_v2 *wp_tablet_tool_v2) {
@@ -3430,7 +3424,6 @@ void WaylandThread::_wp_tablet_tool_on_proximity_out(void *data, struct zwp_tabl
 
 	ts->data_pending.proximal_id = DisplayServerEnums::INVALID_WINDOW_ID;
 	ts->data_pending.pressed_button_mask.clear();
-
 }
 
 void WaylandThread::_wp_tablet_tool_on_down(void *data, struct zwp_tablet_tool_v2 *wp_tablet_tool_v2, uint32_t serial) {
@@ -3839,7 +3832,6 @@ void WaylandThread::_xdg_activation_token_on_done(void *data, struct xdg_activat
 
 	xdg_activation_v1_activate(ws->wayland_thread->registry.xdg_activation, token, ws->wl_surface);
 	xdg_activation_token_v1_destroy(xdg_activation_token);
-
 }
 
 void WaylandThread::_godot_embedding_compositor_on_client(void *data, struct godot_embedding_compositor *godot_embedding_compositor, struct godot_embedded_client *godot_embedded_client, int32_t pid) {
@@ -4484,7 +4476,6 @@ void WaylandThread::window_create(DisplayServerEnums::WindowID p_window_id, cons
 		pending_window_layers.erase(p_window_id);
 	}
 
-
 	ws.wl_surface = wl_compositor_create_surface(registry.wl_compositor);
 	wl_proxy_tag_godot((struct wl_proxy *)ws.wl_surface);
 	wl_surface_add_listener(ws.wl_surface, &wl_surface_listener, &ws);
@@ -4537,11 +4528,11 @@ void WaylandThread::window_create(DisplayServerEnums::WindowID p_window_id, cons
 
 		// Create layer shell surface
 		ws.wlr_layer_surface = zwlr_layer_shell_v1_get_layer_surface(
-			registry.wlr_layer_shell,
-			ws.wl_surface,
-			nullptr, // output (null means all outputs)
-			protocol_layer, // layer enum
-			"godot" // namespace
+				registry.wlr_layer_shell,
+				ws.wl_surface,
+				nullptr, // output (null means all outputs)
+				protocol_layer, // layer enum
+				"godot" // namespace
 		);
 
 		zwlr_layer_surface_v1_add_listener(ws.wlr_layer_surface, &wlr_layer_surface_listener, &ws);
@@ -4566,8 +4557,7 @@ void WaylandThread::window_create(DisplayServerEnums::WindowID p_window_id, cons
 		zwlr_layer_surface_v1_set_size(ws.wlr_layer_surface, config.width, config.height);
 		zwlr_layer_surface_v1_set_anchor(ws.wlr_layer_surface, config.anchor);
 		zwlr_layer_surface_v1_set_margin(ws.wlr_layer_surface,
-			config.margin_top, config.margin_right, config.margin_bottom, config.margin_left);
-
+				config.margin_top, config.margin_right, config.margin_bottom, config.margin_left);
 
 		decorated = true; // Layer shell handles its own "decoration"
 	}
@@ -5548,7 +5538,6 @@ void WaylandThread::window_set_wayland_layer(DisplayServerEnums::WindowID p_wind
 			// but this would require protocol support that's not commonly implemented
 		}
 	}
-
 }
 
 int WaylandThread::window_get_wayland_layer(DisplayServerEnums::WindowID p_window_id) const {
@@ -5590,7 +5579,7 @@ void WaylandThread::window_set_layer_surface_rect(DisplayServerEnums::WindowID p
 	zwlr_layer_surface_v1_set_size(ws.wlr_layer_surface, config.width, config.height);
 	zwlr_layer_surface_v1_set_anchor(ws.wlr_layer_surface, config.anchor);
 	zwlr_layer_surface_v1_set_margin(ws.wlr_layer_surface,
-		config.margin_top, config.margin_right, config.margin_bottom, config.margin_left);
+			config.margin_top, config.margin_right, config.margin_bottom, config.margin_left);
 
 	// Don't commit immediately - defer until next frame like buffer_scale_changed
 	// This ensures proper synchronization with the rendering system
