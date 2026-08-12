@@ -1379,7 +1379,6 @@ void WaylandThread::_xdg_popup_on_configure(void *data, struct xdg_popup *xdg_po
 	pos += parent->rect.position;
 
 	if (ws->rect.position != pos) {
-
 		double parent_scale = window_state_get_scale_factor(parent);
 
 		ws->rect.position = pos;
@@ -1392,7 +1391,6 @@ void WaylandThread::_xdg_popup_on_configure(void *data, struct xdg_popup *xdg_po
 
 		ws->wayland_thread->push_message(rect_msg);
 	}
-
 }
 
 void WaylandThread::_xdg_popup_on_popup_done(void *data, struct xdg_popup *xdg_popup) {
@@ -1417,9 +1415,9 @@ void WaylandThread::_wlr_layer_surface_on_configure(void *data, struct zwlr_laye
 	// Rate limit excessive configure events - ignore duplicates within 8ms (~120fps)
 	uint64_t current_time = OS::get_singleton()->get_ticks_msec();
 	if (ws->last_configure_time > 0 &&
-		(current_time - ws->last_configure_time) < 8 &&
-		ws->last_configure_width == width &&
-		ws->last_configure_height == height) {
+			(current_time - ws->last_configure_time) < 8 &&
+			ws->last_configure_width == width &&
+			ws->last_configure_height == height) {
 		// This is a duplicate configure event, just acknowledge and return
 		zwlr_layer_surface_v1_ack_configure(wlr_layer_surface, serial);
 		return;
@@ -1430,7 +1428,7 @@ void WaylandThread::_wlr_layer_surface_on_configure(void *data, struct zwlr_laye
 	ws->last_configure_height = height;
 
 	print_line(vformat("Layer surface configure event: window_id=%d, serial=%d, compositor_size=(%d,%d), current_size=(%d,%d)",
-		ws->id, serial, width, height, ws->rect.size.width, ws->rect.size.height));
+			ws->id, serial, width, height, ws->rect.size.width, ws->rect.size.height));
 
 	// Acknowledge the configure event
 	zwlr_layer_surface_v1_ack_configure(wlr_layer_surface, serial);
@@ -1472,7 +1470,6 @@ void WaylandThread::_wlr_layer_surface_on_configure(void *data, struct zwlr_laye
 void WaylandThread::_wlr_layer_surface_on_closed(void *data, struct zwlr_layer_surface_v1 *wlr_layer_surface) {
 	WindowState *ws = (WindowState *)data;
 	ERR_FAIL_NULL(ws);
-
 
 	// Send close event to notify Godot
 	Ref<WindowEventMessage> msg;
@@ -1555,7 +1552,6 @@ void WaylandThread::libdecor_frame_on_configure(struct libdecor_frame *frame, st
 	}
 
 	window_state_update_size(ws, width, height);
-
 }
 
 void WaylandThread::libdecor_frame_on_close(struct libdecor_frame *frame, void *user_data) {
@@ -1568,13 +1564,11 @@ void WaylandThread::libdecor_frame_on_close(struct libdecor_frame *frame, void *
 	winevent_msg->event = DisplayServer::WINDOW_EVENT_CLOSE_REQUEST;
 
 	ws->wayland_thread->push_message(winevent_msg);
-
 }
 
 void WaylandThread::libdecor_frame_on_commit(struct libdecor_frame *frame, void *user_data) {
 	// We're skipping this as we don't really care about libdecor's commit for
 	// atomicity reasons. See `_frame_wl_callback_on_done` for more info.
-
 }
 
 void WaylandThread::libdecor_frame_on_dismiss_popup(struct libdecor_frame *frame, const char *seat_name, void *user_data) {
@@ -1711,7 +1705,6 @@ void WaylandThread::_wl_pointer_on_enter(void *data, struct wl_pointer *wl_point
 	pd.position.y = wl_fixed_to_double(surface_y);
 
 	seat_state_update_cursor(ss);
-
 }
 
 void WaylandThread::_wl_pointer_on_leave(void *data, struct wl_pointer *wl_pointer, uint32_t serial, struct wl_surface *surface) {
@@ -1731,7 +1724,6 @@ void WaylandThread::_wl_pointer_on_leave(void *data, struct wl_pointer *wl_point
 
 	pd.pointed_id = DisplayServer::INVALID_WINDOW_ID;
 	pd.pressed_button_mask.clear();
-
 }
 
 void WaylandThread::_wl_pointer_on_motion(void *data, struct wl_pointer *wl_pointer, uint32_t time, wl_fixed_t surface_x, wl_fixed_t surface_y) {
@@ -2154,7 +2146,6 @@ void WaylandThread::_wl_keyboard_on_enter(void *data, struct wl_keyboard *wl_key
 	msg->id = ws->id;
 	msg->event = DisplayServer::WINDOW_EVENT_FOCUS_IN;
 	wayland_thread->push_message(msg);
-
 }
 
 void WaylandThread::_wl_keyboard_on_leave(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial, struct wl_surface *surface) {
@@ -2189,7 +2180,6 @@ void WaylandThread::_wl_keyboard_on_leave(void *data, struct wl_keyboard *wl_key
 	msg->id = ws->id;
 	msg->event = DisplayServer::WINDOW_EVENT_FOCUS_OUT;
 	wayland_thread->push_message(msg);
-
 }
 
 void WaylandThread::_wl_keyboard_on_key(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state) {
