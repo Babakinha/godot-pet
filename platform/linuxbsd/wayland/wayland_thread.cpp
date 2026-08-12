@@ -1363,8 +1363,6 @@ void WaylandThread::_wl_surface_on_enter(void *data, struct wl_surface *wl_surfa
 	WindowState *ws = (WindowState *)data;
 	ERR_FAIL_NULL(ws);
 
-	DEBUG_LOG_WAYLAND_THREAD(vformat("Window entered output %x.", (size_t)wl_output));
-
 	ws->wl_outputs.insert(wl_output);
 
 	// Workaround for buffer scaling as there's no guaranteed way of knowing the
@@ -1389,18 +1387,6 @@ void WaylandThread::_frame_wl_callback_on_done(void *data, struct wl_callback *w
 
 	ws->frame_callback = wl_surface_frame(ws->wl_surface);
 	wl_callback_add_listener(ws->frame_callback, &frame_wl_callback_listener, ws);
-
-	if (ws->wl_surface && ws->buffer_scale_changed) {
-		// NOTE: We're only now setting the buffer scale as the idea is to get this
-		// data committed together with the new frame, all by the rendering driver.
-		// This is important because we might otherwise set an invalid combination of
-		// buffer size and scale (e.g. odd size and 2x scale). We're pretty much
-		// guaranteed to get a proper buffer in the next render loop as the rescaling
-		// method also informs the engine of a "window rect change", triggering
-		// rendering if needed.
-		wl_surface_set_buffer_scale(ws->wl_surface, window_state_get_preferred_buffer_scale(ws));
-		ws->buffer_scale_changed = false;
-	}
 
 	if (ws->wl_surface && ws->layer_surface_config_changed) {
 		// Commit layer surface configuration changes on frame boundary
@@ -1512,7 +1498,6 @@ void WaylandThread::_xdg_surface_on_configure(void *data, struct xdg_surface *xd
 
 	ws->ready = true;
 
-	DEBUG_LOG_WAYLAND_THREAD(vformat("xdg surface on configure rect %s", ws->rect));
 }
 
 void WaylandThread::_xdg_toplevel_on_configure(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states) {
@@ -2063,7 +2048,6 @@ void WaylandThread::_wl_pointer_on_enter(void *data, struct wl_pointer *wl_point
 
 	seat_state_update_cursor(ss);
 
-	DEBUG_LOG_WAYLAND_THREAD(vformat("Pointer entered window %d.", ws->id));
 
 	if (wl_pointer_get_version(wl_pointer) < WL_POINTER_FRAME_SINCE_VERSION) {
 		_wl_pointer_on_frame(data, wl_pointer);
@@ -2089,7 +2073,6 @@ void WaylandThread::_wl_pointer_on_leave(void *data, struct wl_pointer *wl_point
 
 	pd.pointed_id = DisplayServerEnums::INVALID_WINDOW_ID;
 
-	DEBUG_LOG_WAYLAND_THREAD(vformat("Pointer left window %d.", id));
 
 	if (wl_pointer_get_version(wl_pointer) < WL_POINTER_FRAME_SINCE_VERSION) {
 		_wl_pointer_on_frame(data, wl_pointer);
@@ -2601,7 +2584,6 @@ void WaylandThread::_wl_keyboard_on_leave(void *data, struct wl_keyboard *wl_key
 		xkb_state_update_mask(ss->xkb_state, 0, 0, 0, 0, 0, 0);
 	}
 
-	DEBUG_LOG_WAYLAND_THREAD(vformat("Keyboard unfocused window %d.", ws->id));
 }
 
 void WaylandThread::_wl_keyboard_on_key(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state) {
@@ -2973,7 +2955,6 @@ void WaylandThread::_wl_data_source_on_send(void *data, struct wl_data_source *w
 	}
 
 	if (wl_data_source == ss->wl_data_source_selection) {
-		DEBUG_LOG_WAYLAND_THREAD("Clipboard: requested selection.");
 		_clipboard_send(ss->selection_data, mime_type, fd);
 	}
 
@@ -3306,7 +3287,6 @@ void WaylandThread::_wp_primary_selection_source_on_send(void *data, struct zwp_
 	}
 
 	if (wp_primary_selection_source_v1 == ss->wp_primary_selection_source) {
-		DEBUG_LOG_WAYLAND_THREAD("Clipboard: requested primary selection.");
 		_clipboard_send(ss->primary_data, mime_type, fd);
 	}
 
@@ -3836,7 +3816,6 @@ void WaylandThread::_godot_embedding_compositor_on_client(void *data, struct god
 	client_state->pid = pid;
 	godot_embedded_client_add_listener(godot_embedded_client, &godot_embedded_client_listener, client_state);
 
-	DEBUG_LOG_WAYLAND_THREAD(vformat("New client %d.", pid));
 	state->clients.push_back(godot_embedded_client);
 }
 
@@ -3853,7 +3832,6 @@ void WaylandThread::_godot_embedded_client_on_disconnected(void *data, struct go
 	memfree(state);
 	godot_embedded_client_destroy(godot_embedded_client);
 
-	DEBUG_LOG_WAYLAND_THREAD(vformat("Client %d disconnected.", state->pid));
 }
 
 void WaylandThread::_godot_embedded_client_on_window_embedded(void *data, struct godot_embedded_client *godot_embedded_client) {
@@ -3878,7 +3856,6 @@ void WaylandThread::_godot_embedded_client_on_window_focus_in(void *data, struct
 	ERR_FAIL_NULL(ecomp_state);
 
 	ecomp_state->focused_pid = state->pid;
-	DEBUG_LOG_WAYLAND_THREAD(vformat("Embedded client pid %d focus in", state->pid));
 }
 
 void WaylandThread::_godot_embedded_client_on_window_focus_out(void *data, struct godot_embedded_client *godot_embedded_client) {
@@ -3889,7 +3866,6 @@ void WaylandThread::_godot_embedded_client_on_window_focus_out(void *data, struc
 	ERR_FAIL_NULL(ecomp_state);
 
 	ecomp_state->focused_pid = -1;
-	DEBUG_LOG_WAYLAND_THREAD(vformat("Embedded client pid %d focus out", state->pid));
 }
 
 void WaylandThread::_clipboard_send(Vector<uint8_t> &p_data, const char *p_media_type, int32_t p_fd) {
@@ -3904,16 +3880,13 @@ void WaylandThread::_clipboard_send(Vector<uint8_t> &p_data, const char *p_media
 	}
 
 	if (!valid_mime) {
-		DEBUG_LOG_WAYLAND_THREAD(vformat("Clipboard: Media type '%s' unknown, skipping.", p_media_type));
 		return;
 	}
 
 	written_bytes = write(p_fd, p_data.ptr(), p_data.size());
 
 	if (written_bytes > 0) {
-		DEBUG_LOG_WAYLAND_THREAD(vformat("Clipboard: sent %d bytes.", written_bytes));
 	} else if (written_bytes == 0) {
-		DEBUG_LOG_WAYLAND_THREAD("Clipboard: no bytes sent.");
 	} else {
 		ERR_PRINT(vformat("Clipboard: write error %d.", errno));
 	}
@@ -4543,7 +4516,7 @@ void WaylandThread::window_create(DisplayServerEnums::WindowID p_window_id, cons
 		}
 
 		// Use the window's rect for anchor/margin calculation
-		Rect2i window_rect = Rect2i(ws.rect.position, Size2i(p_width, p_height));
+		Rect2i window_rect = Rect2i(ws.rect.position, p_size);
 		LayerSurfaceConfig config = _calculate_layer_surface_config(window_rect, output_size);
 
 		// Apply the calculated configuration
