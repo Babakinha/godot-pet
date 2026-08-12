@@ -136,22 +136,22 @@ int WaylandThread::_allocate_shm_file(size_t size) {
 // Helper function to calculate layer surface anchor and margins from Godot's position and size
 WaylandThread::LayerSurfaceConfig WaylandThread::_calculate_layer_surface_config(const Rect2i &p_rect, const Size2i &p_output_size) {
 	LayerSurfaceConfig config = {};
-	
+
 	// Extract position and size
 	int x = p_rect.position.x;
 	int y = p_rect.position.y;
 	int width = p_rect.size.width;
 	int height = p_rect.size.height;
-	
+
 	// Calculate distances from each edge
 	int dist_left = x;
 	int dist_right = p_output_size.width - (x + width);
 	int dist_top = y;
 	int dist_bottom = p_output_size.height - (y + height);
-	
+
 	// Determine anchor based on which edges the window is closest to
 	config.anchor = 0;
-	
+
 	// Choose horizontal anchor (prefer edges)
 	if (dist_left <= dist_right) {
 		config.anchor |= ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
@@ -162,7 +162,7 @@ WaylandThread::LayerSurfaceConfig WaylandThread::_calculate_layer_surface_config
 		config.margin_left = 0;
 		config.margin_right = dist_right;
 	}
-	
+
 	// Choose vertical anchor (prefer edges)
 	if (dist_top <= dist_bottom) {
 		config.anchor |= ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP;
@@ -173,11 +173,11 @@ WaylandThread::LayerSurfaceConfig WaylandThread::_calculate_layer_surface_config
 		config.margin_top = 0;
 		config.margin_bottom = dist_bottom;
 	}
-	
+
 	// Set the size
 	config.width = width;
 	config.height = height;
-	
+
 	return config;
 }
 
@@ -1170,7 +1170,7 @@ void WaylandThread::_frame_wl_callback_on_done(void *data, struct wl_callback *w
 		wl_surface_set_buffer_scale(ws->wl_surface, window_state_get_preferred_buffer_scale(ws));
 		ws->buffer_scale_changed = false;
 	}
-	
+
 	if (ws->wl_surface && ws->layer_surface_config_changed) {
 		// Commit layer surface configuration changes on frame boundary
 		// This ensures proper synchronization with the rendering system
@@ -1423,20 +1423,20 @@ void WaylandThread::_wlr_layer_surface_on_configure(void *data, struct zwlr_laye
 
 	// Rate limit excessive configure events - ignore duplicates within 8ms (~120fps)
 	uint64_t current_time = OS::get_singleton()->get_ticks_msec();
-	if (ws->last_configure_time > 0 && 
+	if (ws->last_configure_time > 0 &&
 		(current_time - ws->last_configure_time) < 8 &&
-		ws->last_configure_width == width && 
+		ws->last_configure_width == width &&
 		ws->last_configure_height == height) {
 		// This is a duplicate configure event, just acknowledge and return
 		zwlr_layer_surface_v1_ack_configure(wlr_layer_surface, serial);
 		return;
 	}
-	
+
 	ws->last_configure_time = current_time;
 	ws->last_configure_width = width;
 	ws->last_configure_height = height;
 
-	print_line(vformat("Layer surface configure event: window_id=%d, serial=%d, compositor_size=(%d,%d), current_size=(%d,%d)", 
+	print_line(vformat("Layer surface configure event: window_id=%d, serial=%d, compositor_size=(%d,%d), current_size=(%d,%d)",
 		ws->id, serial, width, height, ws->rect.size.width, ws->rect.size.height));
 
 	// Acknowledge the configure event
@@ -1449,12 +1449,12 @@ void WaylandThread::_wlr_layer_surface_on_configure(void *data, struct zwlr_laye
 			// Update our internal state
 			ws->rect.size.width = width;
 			ws->rect.size.height = height;
-			
+
 			// Update viewport if we have one
 			if (ws->wp_viewport) {
 				wp_viewport_set_destination(ws->wp_viewport, width, height);
 			}
-			
+
 			// Send a WindowRectMessage to ensure the rendering system knows about the new size
 			double win_scale = window_state_get_scale_factor(ws);
 			Ref<WindowRectMessage> rect_msg;
@@ -1463,7 +1463,7 @@ void WaylandThread::_wlr_layer_surface_on_configure(void *data, struct zwlr_laye
 			rect_msg->rect.position = scale_vector2i(ws->rect.position, win_scale);
 			rect_msg->rect.size = scale_vector2i(ws->rect.size, win_scale);
 			ws->wayland_thread->push_message(rect_msg);
-			
+
 			// Clear the flag since the resize is complete
 			ws->layer_surface_resizing = false;
 		} else {
@@ -1486,7 +1486,7 @@ void WaylandThread::_wlr_layer_surface_on_closed(void *data, struct zwlr_layer_s
 	msg.instantiate();
 	msg->id = ws->id;
 	msg->event = DisplayServer::WINDOW_EVENT_CLOSE_REQUEST;
-	
+
 	ws->wayland_thread->push_message(msg);
 }
 
@@ -3630,7 +3630,7 @@ void WaylandThread::window_create(DisplayServer::WindowID p_window_id, int p_wid
 
 	// Check if this window should use layer shell instead of XDG
 	bool use_layer_shell = (registry.wlr_layer_shell != nullptr && ws.wayland_layer > 0);
-	
+
 	if (use_layer_shell) {
 		// Map Godot layer values to protocol layer values
 		uint32_t protocol_layer;
@@ -3651,7 +3651,7 @@ void WaylandThread::window_create(DisplayServer::WindowID p_window_id, int p_wid
 				protocol_layer = ZWLR_LAYER_SHELL_V1_LAYER_TOP;
 				break;
 		}
-		
+
 		// Create layer shell surface
 		ws.wlr_layer_surface = zwlr_layer_shell_v1_get_layer_surface(
 			registry.wlr_layer_shell,
@@ -3660,12 +3660,12 @@ void WaylandThread::window_create(DisplayServer::WindowID p_window_id, int p_wid
 			protocol_layer, // layer enum
 			"godot" // namespace
 		);
-		
+
 		zwlr_layer_surface_v1_add_listener(ws.wlr_layer_surface, &wlr_layer_surface_listener, &ws);
-		
+
 		// Calculate anchor and margins from Godot's position and size
 		Size2i output_size = Size2i(1920, 1080); // Default fallback size
-		
+
 		// Try to get the actual output size from the first available output
 		if (!registry.wl_outputs.is_empty()) {
 			struct wl_output *first_output = registry.wl_outputs.front()->get();
@@ -3674,18 +3674,18 @@ void WaylandThread::window_create(DisplayServer::WindowID p_window_id, int p_wid
 				output_size = screen_state->data.size;
 			}
 		}
-		
+
 		// Use the window's rect for anchor/margin calculation
 		Rect2i window_rect = Rect2i(ws.rect.position, Size2i(p_width, p_height));
 		LayerSurfaceConfig config = _calculate_layer_surface_config(window_rect, output_size);
-		
+
 		// Apply the calculated configuration
 		zwlr_layer_surface_v1_set_size(ws.wlr_layer_surface, config.width, config.height);
 		zwlr_layer_surface_v1_set_anchor(ws.wlr_layer_surface, config.anchor);
-		zwlr_layer_surface_v1_set_margin(ws.wlr_layer_surface, 
+		zwlr_layer_surface_v1_set_margin(ws.wlr_layer_surface,
 			config.margin_top, config.margin_right, config.margin_bottom, config.margin_left);
-		
-		
+
+
 		decorated = true; // Layer shell handles its own "decoration"
 	}
 
@@ -3719,12 +3719,15 @@ void WaylandThread::window_create(DisplayServer::WindowID p_window_id, int p_wid
 	ws.frame_callback = wl_surface_frame(ws.wl_surface);
 	wl_callback_add_listener(ws.frame_callback, &frame_wl_callback_listener, &ws);
 
-	if (registry.xdg_exporter_v2) {
-		ws.xdg_exported_v2 = zxdg_exporter_v2_export_toplevel(registry.xdg_exporter_v2, ws.wl_surface);
-		zxdg_exported_v2_add_listener(ws.xdg_exported_v2, &xdg_exported_v2_listener, &ws);
-	} else if (registry.xdg_exporter_v1) {
-		ws.xdg_exported_v1 = zxdg_exporter_v1_export(registry.xdg_exporter_v1, ws.wl_surface);
-		zxdg_exported_v1_add_listener(ws.xdg_exported_v1, &xdg_exported_v1_listener, &ws);
+	// xdg_exporter_v2 doesnt work with layered windows
+	if (ws.wayland_layer == 0) {
+		if (registry.xdg_exporter_v2) {
+			ws.xdg_exported_v2 = zxdg_exporter_v2_export_toplevel(registry.xdg_exporter_v2, ws.wl_surface);
+			zxdg_exported_v2_add_listener(ws.xdg_exported_v2, &xdg_exported_v2_listener, &ws);
+		} else if (registry.xdg_exporter_v1) {
+			ws.xdg_exported_v1 = zxdg_exporter_v1_export(registry.xdg_exporter_v1, ws.wl_surface);
+			zxdg_exported_v1_add_listener(ws.xdg_exported_v1, &xdg_exported_v1_listener, &ws);
+		}
 	}
 
 	wl_surface_commit(ws.wl_surface);
@@ -4350,11 +4353,11 @@ void WaylandThread::window_set_wayland_layer(DisplayServer::WindowID p_window_id
 	WindowState &ws = windows[p_window_id];
 	int old_layer = ws.wayland_layer;
 	ws.wayland_layer = p_layer;
-	
+
 	// Check if the window already has surfaces created
 	bool has_xdg_surface = (ws.xdg_surface != nullptr);
 	bool has_layer_surface = (ws.wlr_layer_surface != nullptr);
-	
+
 	if (has_xdg_surface || has_layer_surface) {
 		// Window already exists - changing surface type requires recreation
 		if ((old_layer == 0) != (p_layer == 0)) {
@@ -4364,7 +4367,7 @@ void WaylandThread::window_set_wayland_layer(DisplayServer::WindowID p_window_id
 			// but this would require protocol support that's not commonly implemented
 		}
 	}
-	
+
 }
 
 int WaylandThread::window_get_wayland_layer(DisplayServer::WindowID p_window_id) const {
@@ -4376,19 +4379,19 @@ int WaylandThread::window_get_wayland_layer(DisplayServer::WindowID p_window_id)
 void WaylandThread::window_set_layer_surface_rect(DisplayServer::WindowID p_window_id, const Rect2i &p_rect) {
 	ERR_FAIL_COND(!windows.has(p_window_id));
 	WindowState &ws = windows[p_window_id];
-	
+
 	// Only applies to layer surfaces
 	if (!ws.wlr_layer_surface) {
 		print_line("ERROR: No wlr_layer_surface for this window");
 		return;
 	}
-	
+
 	// Update the window's internal rect
 	ws.rect = p_rect;
-	
+
 	// Set the flag to prevent feedback loops
 	ws.layer_surface_resizing = true;
-	
+
 	// Get output size for anchor/margin calculation
 	Size2i output_size = Size2i(1920, 1080); // Default fallback
 	if (!registry.wl_outputs.is_empty()) {
@@ -4398,16 +4401,16 @@ void WaylandThread::window_set_layer_surface_rect(DisplayServer::WindowID p_wind
 			output_size = screen_state->data.size;
 		}
 	}
-	
+
 	// Calculate new anchor and margins
 	LayerSurfaceConfig config = _calculate_layer_surface_config(p_rect, output_size);
-	
+
 	// Apply the new configuration
 	zwlr_layer_surface_v1_set_size(ws.wlr_layer_surface, config.width, config.height);
 	zwlr_layer_surface_v1_set_anchor(ws.wlr_layer_surface, config.anchor);
 	zwlr_layer_surface_v1_set_margin(ws.wlr_layer_surface,
 		config.margin_top, config.margin_right, config.margin_bottom, config.margin_left);
-	
+
 	// Don't commit immediately - defer until next frame like buffer_scale_changed
 	// This ensures proper synchronization with the rendering system
 	ws.layer_surface_config_changed = true;
