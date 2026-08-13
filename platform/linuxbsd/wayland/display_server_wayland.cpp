@@ -1192,7 +1192,6 @@ void DisplayServerWayland::window_set_position(const Point2i &p_position, Displa
 void DisplayServerWayland::window_set_max_size(const Size2i p_size, DisplayServerEnums::WindowID p_window_id) {
 	MutexLock mutex_lock(wayland_thread.mutex);
 
-
 	if (p_size.x < 0 || p_size.y < 0) {
 		ERR_FAIL_MSG("Maximum window size can't be negative!");
 	}
@@ -1251,7 +1250,6 @@ void DisplayServerWayland::window_set_transient(DisplayServerEnums::WindowID p_w
 
 void DisplayServerWayland::window_set_min_size(const Size2i p_size, DisplayServerEnums::WindowID p_window_id) {
 	MutexLock mutex_lock(wayland_thread.mutex);
-
 
 	ERR_FAIL_COND(!windows.has(p_window_id));
 	WindowData &wd = windows[p_window_id];
@@ -1396,7 +1394,6 @@ void DisplayServerWayland::window_set_flag(DisplayServerEnums::WindowFlags p_fla
 	ERR_FAIL_COND(!windows.has(p_window_id));
 	WindowData &wd = windows[p_window_id];
 
-
 	switch (p_flag) {
 		case DisplayServerEnums::WINDOW_FLAG_BORDERLESS: {
 			wayland_thread.window_set_borderless(p_window_id, p_enabled);
@@ -1474,7 +1471,6 @@ int DisplayServerWayland::window_get_wayland_layer(DisplayServerEnums::WindowID 
 
 void DisplayServerWayland::window_request_attention(DisplayServerEnums::WindowID p_window_id) {
 	MutexLock mutex_lock(wayland_thread.mutex);
-
 
 	wayland_thread.window_request_attention(p_window_id);
 }
@@ -2326,7 +2322,6 @@ void DisplayServerWayland::set_icon(const Ref<Image> &p_icon) {
 
 void DisplayServerWayland::set_context(DisplayServerEnums::Context p_context) {
 	MutexLock mutex_lock(wayland_thread.mutex);
-
 
 	context = p_context;
 

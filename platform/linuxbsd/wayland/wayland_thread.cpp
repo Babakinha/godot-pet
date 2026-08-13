@@ -1497,7 +1497,6 @@ void WaylandThread::_xdg_surface_on_configure(void *data, struct xdg_surface *xd
 	ERR_FAIL_NULL(ws);
 
 	ws->ready = true;
-
 }
 
 void WaylandThread::_xdg_toplevel_on_configure(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states) {
@@ -2051,7 +2050,6 @@ void WaylandThread::_wl_pointer_on_enter(void *data, struct wl_pointer *wl_point
 
 	seat_state_update_cursor(ss);
 
-
 	if (wl_pointer_get_version(wl_pointer) < WL_POINTER_FRAME_SINCE_VERSION) {
 		_wl_pointer_on_frame(data, wl_pointer);
 	}
@@ -2076,7 +2074,6 @@ void WaylandThread::_wl_pointer_on_leave(void *data, struct wl_pointer *wl_point
 	//DisplayServerEnums::WindowID id = pd.pointed_id;
 
 	pd.pointed_id = DisplayServerEnums::INVALID_WINDOW_ID;
-
 
 	if (wl_pointer_get_version(wl_pointer) < WL_POINTER_FRAME_SINCE_VERSION) {
 		_wl_pointer_on_frame(data, wl_pointer);
@@ -2587,7 +2584,6 @@ void WaylandThread::_wl_keyboard_on_leave(void *data, struct wl_keyboard *wl_key
 	if (ss->xkb_state != nullptr) {
 		xkb_state_update_mask(ss->xkb_state, 0, 0, 0, 0, 0, 0);
 	}
-
 }
 
 void WaylandThread::_wl_keyboard_on_key(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state) {
@@ -3835,7 +3831,6 @@ void WaylandThread::_godot_embedded_client_on_disconnected(void *data, struct go
 
 	memfree(state);
 	godot_embedded_client_destroy(godot_embedded_client);
-
 }
 
 void WaylandThread::_godot_embedded_client_on_window_embedded(void *data, struct godot_embedded_client *godot_embedded_client) {

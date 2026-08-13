@@ -70,13 +70,13 @@
 #include "wayland/protocol/text_input.gen.h"
 #include "wayland/protocol/viewporter.gen.h"
 #include "wayland/protocol/wayland.gen.h"
+#include "wayland/protocol/wlr_layer_shell.gen.h"
 #include "wayland/protocol/xdg_activation.gen.h"
 #include "wayland/protocol/xdg_decoration.gen.h"
 #include "wayland/protocol/xdg_foreign_v2.gen.h"
 #include "wayland/protocol/xdg_shell.gen.h"
 #include "wayland/protocol/xdg_system_bell.gen.h"
 #include "wayland/protocol/xdg_toplevel_icon.gen.h"
-#include "wayland/protocol/wlr_layer_shell.gen.h"
 
 // NOTE: Deprecated.
 #include "wayland/protocol/xdg_foreign_v1.gen.h"
