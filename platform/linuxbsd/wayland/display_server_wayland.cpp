@@ -1461,9 +1461,6 @@ void DisplayServerWayland::window_set_wayland_layer(int p_layer, DisplayServerEn
 	if (wayland_thread.registry.wlr_layer_shell) {
 		wayland_thread.window_set_wayland_layer(p_window_id, p_layer);
 	}
-
-	// Store the layer for when the window becomes visible
-	wd.wayland_layer = p_layer;
 }
 
 int DisplayServerWayland::window_get_wayland_layer(DisplayServerEnums::WindowID p_window_id) const {

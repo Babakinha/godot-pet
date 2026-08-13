@@ -1680,6 +1680,9 @@ void WaylandThread::_wlr_layer_surface_on_configure(void *data, struct zwlr_laye
 	WindowState *ws = (WindowState *)data;
 	ERR_FAIL_NULL(ws);
 
+	// Meow meow
+	ws->ready = true;
+
 	// Rate limit excessive configure events - ignore duplicates within 8ms (~120fps)
 	uint64_t current_time = OS::get_singleton()->get_ticks_msec();
 	if (ws->last_configure_time > 0 &&
@@ -2069,7 +2072,8 @@ void WaylandThread::_wl_pointer_on_leave(void *data, struct wl_pointer *wl_point
 		return;
 	}
 
-	DisplayServerEnums::WindowID id = pd.pointed_id;
+	// We removed the debug log oops lmao
+	//DisplayServerEnums::WindowID id = pd.pointed_id;
 
 	pd.pointed_id = DisplayServerEnums::INVALID_WINDOW_ID;
 
@@ -5455,6 +5459,7 @@ void WaylandThread::window_set_color_profile(DisplayServerEnums::WindowID p_wind
 }
 
 void WaylandThread::window_set_mouse_passthrough(DisplayServerEnums::WindowID p_window_id, const Vector<Vector2> &p_region) {
+	ERR_FAIL_COND(!windows.has(p_window_id));
 	WindowState &ws = windows[p_window_id];
 	ERR_FAIL_NULL(ws.wl_surface);
 
