@@ -5459,18 +5459,36 @@ void WaylandThread::window_set_mouse_passthrough(DisplayServerEnums::WindowID p_
 	ERR_FAIL_NULL(ws.wl_surface);
 
 	if (p_region.is_empty()) {
-		// Empty region means full passthrough - create an empty input region
+		// Empty region = full passthrough
 		struct wl_region *input_region = wl_compositor_create_region(registry.wl_compositor);
-		// Don't add any rectangles to the region - empty region means no input
 		wl_surface_set_input_region(ws.wl_surface, input_region);
 		wl_region_destroy(input_region);
 	} else {
-		// TODO: Implement custom region support if needed
-		// For now, treat any non-empty region as normal input handling
-		wl_surface_set_input_region(ws.wl_surface, nullptr);
+		struct wl_region *input_region = wl_compositor_create_region(registry.wl_compositor);
+
+		for (int i = 0; i < p_region.size(); i += 4) {
+			if (i + 3 >= p_region.size()) {
+				break;
+			}
+
+			Vector2 top_left = p_region[i];
+			Vector2 bottom_right = p_region[i + 2];
+
+			int x = (int)top_left.x;
+			int y = (int)top_left.y;
+			int width = (int)(bottom_right.x - top_left.x);
+			int height = (int)(bottom_right.y - top_left.y);
+
+			if (width > 0 && height > 0) {
+				wl_region_add(input_region, x, y, width, height);
+			}
+		}
+
+		wl_surface_set_input_region(ws.wl_surface, input_region);
+		wl_region_destroy(input_region);
 	}
 
-	// Commit the change
+	// Commit the surface region update to the layer-shell compositor
 	wl_surface_commit(ws.wl_surface);
 }
 
